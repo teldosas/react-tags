@@ -8,6 +8,8 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactDom = require('react-dom');
+
 var _reactDnd = require('react-dnd');
 
 var _flow = require('lodash/flow');
@@ -26,7 +28,7 @@ var ItemTypes = { TAG: 'tag' };
 
 var tagSource = {
   beginDrag: function beginDrag(props) {
-    return { id: props.tag.id };
+    return { id: props.tag.id, index: props.index };
   },
   canDrag: function canDrag(props) {
     return props.moveTag && !props.readOnly;
@@ -34,11 +36,47 @@ var tagSource = {
 };
 
 var tagTarget = {
-  hover: function hover(props, monitor) {
-    var draggedId = monitor.getItem().id;
-    if (draggedId !== props.id) {
-      props.moveTag(draggedId, props.tag.id);
+  hover: function hover(props, monitor, component) {
+    var dragIndex = monitor.getItem().index;
+    var hoverIndex = props.index;
+
+    // Don't replace items with themselves
+    if (dragIndex === hoverIndex) {
+      return;
     }
+
+    // Determine rectangle on screen
+    var hoverBoundingRect = (0, _reactDom.findDOMNode)(component).getBoundingClientRect();
+
+    // Get horizontal middle
+    var hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
+
+    // Determine mouse position
+    var clientOffset = monitor.getClientOffset();
+
+    // Get pixels to the left side
+    var hoverClientX = clientOffset.x - hoverBoundingRect.left;
+
+    // Only perform the move when the mouse has crossed half of the items width
+
+    // Dragging to the right
+    if (dragIndex < hoverIndex && hoverClientX < hoverMiddleX) {
+      return;
+    }
+
+    // Dragging to the left
+    if (dragIndex > hoverIndex && hoverClientX > hoverMiddleX) {
+      return;
+    }
+
+    // Time to actually perform the action
+    props.moveTag(dragIndex, hoverIndex);
+
+    // Note: we're mutating the monitor item here!
+    // Generally it's better to avoid mutations,
+    // but it's good here for the sake of performance
+    // to avoid expensive index searches.
+    monitor.getItem().index = hoverIndex;
   },
   canDrop: function canDrop(props) {
     return !props.readOnly;

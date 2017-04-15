@@ -276,28 +276,20 @@ var ReactTags = _react2.default.createClass({
       selectionMode: true
     });
   },
-  moveTag: function moveTag(id, afterId) {
+  moveTag: function moveTag(dragIndex, hoverIndex) {
     var tags = this.props.tags;
 
     // locate tags
-    var tag = tags.filter(function (t) {
-      return t.id === id;
-    })[0];
-    var afterTag = tags.filter(function (t) {
-      return t.id === afterId;
-    })[0];
-
-    // find their position in the array
-    var tagIndex = tags.indexOf(tag);
-    var afterTagIndex = tags.indexOf(afterTag);
+    var dragTag = tags[dragIndex];
 
     // call handler with current position and after position
-    this.props.handleDrag(tag, tagIndex, afterTagIndex);
+    this.props.handleDrag(dragTag, dragIndex, hoverIndex);
   },
   render: function render() {
     var moveTag = this.props.handleDrag ? this.moveTag : null;
     var tagItems = this.props.tags.map(function (tag, i) {
-      return _react2.default.createElement(_Tag2.default, { key: i,
+      return _react2.default.createElement(_Tag2.default, { key: tag.id,
+        index: i,
         tag: tag,
         labelField: this.props.labelField,
         onDelete: this.handleDelete.bind(this, i),
